@@ -1,34 +1,27 @@
-use std::ops::{Add, Mul};
-
-use nalgebra::{BaseFloat, Vec3 as Vec3};
+use nalgebra::{Vec3};
 use crate::Float;
 
 #[derive(Clone, Copy)]
-pub struct Ray<T> 
-    where T: Mul + Add + BaseFloat
+pub struct Ray 
 {
-    origin: Vec3<T>,
-    dir: Vec3<T>
+    origin: Vec3<Float>,
+    dir: Vec3<Float>
 }
 
-impl<T> Ray<T> 
-    where T: Mul + Add + BaseFloat
-{
-    pub fn new(origin: Vec3<T>, dir: Vec3<T>) -> Ray<T>{
+impl Ray { 
+    pub fn new(origin: Vec3<Float>, dir: Vec3<Float>) -> Ray{
         Ray {origin, dir}
     }
 
-    pub fn origin(&self) -> &Vec3<T> {
+    pub fn origin(&self) -> &Vec3<Float> {
         &self.origin
     }
 
-    pub fn dir(&self) -> &Vec3<T> {
+    pub fn dir(&self) -> &Vec3<Float> {
         &self.dir
     }
 
-    pub fn at(&self, t: T) -> Vec3<T> 
-        where T: Mul + Add, 
-              Vec3<T>: Mul<T, Output = Vec3<T>> + Add<Output = Vec3<T>>
+    pub fn at(&self, t: Float) -> Vec3<Float>
     {
         self.origin + self.dir * t
     }
