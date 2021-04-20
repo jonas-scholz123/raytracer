@@ -1,16 +1,29 @@
-use nalgebra::{Norm};
+use hittable::sphere;
+use nalgebra::{Dot, Norm};
 use nalgebra::Vec3 as Vec3;
+use ray::Ray;
 
 extern crate image;
 mod ray;
-mod intersectable;
+mod hittable;
+mod scene;
+mod io;
+mod camera;
 type Float = f64;
+type Vec = Vec3<Float>;
+type Color = Vec3<Float>;
 
 fn main() {
     make_background();
 }
 
-fn ray_color(ray: ray::Ray) -> Vec3<Float> {
+fn ray_color(ray: ray::Ray) -> Color {
+    let t = sphere_collision_time(&Vec::new(0., 0., -1.), 0.5, ray);
+
+    if t > 0. {
+        let n = ray.at(t) - Vec::new(0., 0., -1.);
+        return 0.5 * Color::new(n.x + 1., n.y + 1., n.z + 1.);
+    }
     let unit_dir = ray.dir().normalize();
     let t = 0.5 * (unit_dir.y + 1.0);
     Vec3::new(1.0, 1.0, 1.0) * (1.0 - t) 
@@ -59,4 +72,17 @@ fn make_background() {
 
     println!("Finished");
     imgbuf.save("./images/background.png").unwrap();
+}
+
+fn sphere_collision_time(center: &Vec, radius: Float, ray: Ray) -> Float {
+    let oc = *ray.origin() - *center;
+    let dir2 = ray.dir().sqnorm();
+    let proj = oc.dot(ray.dir());
+    let c = oc.sqnorm() - radius * radius;
+    let discriminant = proj * proj - dir2 * c;
+    if discriminant < 0. {
+        return -1.;
+    } else {
+        return (-proj - discriminant.sqrt()) / dir2;
+    }
 }

@@ -25,6 +25,7 @@ impl Ray {
     {
         self.origin + self.dir * t
     }
+
 }
 
 #[cfg(test)]
