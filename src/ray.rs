@@ -1,27 +1,27 @@
 use nalgebra::{Vec3};
-use crate::Float;
+use crate::f64;
 
 #[derive(Clone, Copy)]
 pub struct Ray 
 {
-    origin: Vec3<Float>,
-    dir: Vec3<Float>
+    origin: Vec3<f64>,
+    dir: Vec3<f64>
 }
 
 impl Ray { 
-    pub fn new(origin: Vec3<Float>, dir: Vec3<Float>) -> Ray{
+    pub fn new(origin: Vec3<f64>, dir: Vec3<f64>) -> Ray{
         Ray {origin, dir}
     }
 
-    pub fn origin(&self) -> &Vec3<Float> {
+    pub fn origin(&self) -> &Vec3<f64> {
         &self.origin
     }
 
-    pub fn dir(&self) -> &Vec3<Float> {
+    pub fn dir(&self) -> &Vec3<f64> {
         &self.dir
     }
 
-    pub fn at(&self, t: Float) -> Vec3<Float>
+    pub fn at(&self, t: f64) -> Vec3<f64>
     {
         self.origin + self.dir * t
     }

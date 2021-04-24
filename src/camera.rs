@@ -1,49 +1,45 @@
-use nalgebra::{Cross, Norm};
-
-use crate::Float;
+use crate::{ray::Ray};
 use crate::Vec3;
-use std::f64::consts::PI;
 
 pub struct Camera {
-    lower_left_corner: Vec3<Float>,
-    horizontal: Vec3<Float>,
-    vertical: Vec3<Float>,
-    origin: Vec3<Float>,
-    lens_radius: f64,
+    aspect_ratio: f64,
+    viewport_height: f64,
+    viewport_width: f64,
+    focal_length: f64,
+    origin: Vec3<f64>,
+    vertical: Vec3<f64>,
+    horizontal: Vec3<f64>,
+    lower_left_corner: Vec3<f64>,
+}
 
-    u: Vec3<Float>,
-    v: Vec3<Float>,
-    w: Vec3<Float>,
+impl Default for Camera {
+    fn default() -> Camera {
+        let aspect_ratio = 16.0/9.0;
+        let viewport_height = 2.0;
+        let viewport_width = (aspect_ratio * viewport_height) as f64;
+
+        let focal_length = 1.0;
+        let origin = Vec3::new(0., 0., 0.);
+        let horizontal = Vec3::new(viewport_width, 0. as f64, 0. as f64);
+        let vertical = Vec3::new(0. as f64, viewport_height as f64, 0. as f64);
+        let lower_left_corner = origin - horizontal/2. - vertical/2. - Vec3::new(0., 0., focal_length);
+
+        Camera {
+            aspect_ratio,
+            viewport_height,
+            viewport_width,
+            focal_length,
+            origin,
+            vertical,
+            horizontal,
+            lower_left_corner
+        }
+    }
 }
 
 impl Camera {
-    pub fn new(lookfrom: Vec3<Float>, lookat: Vec3<Float>, vup: Vec3<Float>, vfov: Float,
-            aspect: Float, aperture: Float, focus_dist: Float) -> Camera {
-
-        let lens_radius = aperture/2.0;
-        let theta = vfov * PI; 
-        let half_height = (theta/2.0).tan();
-        let half_width = aspect * half_height;
-
-        let origin = lookfrom;
-
-        let w = (lookfrom - lookat).normalize();
-        let u = vup.cross(&w).normalize();
-        let v = w.cross(&u);
-
-        let lower_left_corner = origin - focus_dist * (half_width * u + half_height * v + w);
-        let horizontal = 2.0 * half_width * focus_dist * u;
-        let vertical = 2.0 * half_height * focus_dist * v;
-
-        Camera {
-            lower_left_corner : lower_left_corner,
-            horizontal : horizontal,
-            vertical : vertical,
-            origin : origin,
-            lens_radius : lens_radius,
-            u : u,
-            v : v,
-            w : w,
-        }
+    pub fn get_ray(&self, u: f64, v: f64) -> Ray {
+        Ray::new(self.origin, self.lower_left_corner + self.horizontal * u
+                                  +self.vertical * v  - self.origin)
     }
 }
