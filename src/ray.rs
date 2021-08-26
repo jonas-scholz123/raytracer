@@ -1,5 +1,4 @@
 use nalgebra::{Vec3};
-use crate::f64;
 
 #[derive(Clone, Copy)]
 pub struct Ray 

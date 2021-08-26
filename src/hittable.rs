@@ -11,9 +11,6 @@ pub struct HitRecord {
     pub ray: Ray,
     pub hittable: Box<dyn Hittable>,
     pub compute_normal: Box<dyn Fn() -> VecN>
-    //TODO: replace hittable by a function: fn calc_normal (HitRecord) -> normal
-    //      which depends on the hit object, when calculating normal, only have to
-    //      call hit.normal = Some(hit.calc_normal)
 }
 
 impl Default for HitRecord {
