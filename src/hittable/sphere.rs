@@ -1,3 +1,5 @@
+use nalgebra::{Dot, Norm};
+
 use crate::VecN;
 use super::{Hittable, HitRecord};
 
@@ -29,6 +31,17 @@ impl Hittable for Sphere{
         if discriminant < 0. {
             return None;
         } 
+
+        let t_min = 0.0001;
+        let t_max = f64::INFINITY;
+        
+        let root = (-proj - discriminant.sqrt()) / dir2;
+        if root < t_min || t_max < root {
+            let root = (-proj + discriminant.sqrt()) / dir2;
+            if root < t_min || t_max < root {
+                return None;
+            }
+        }
 
         let t = -(proj + discriminant.sqrt()) / dir2;
 
