@@ -1,22 +1,22 @@
 use nalgebra::{Dot, Norm};
 
 use crate::VecN;
+use crate::material::Scattering;
 use super::{Hittable, HitRecord};
 
 use crate::ray::Ray;
-
-#[derive(Copy, Clone)]
 pub struct Sphere {
     pub center: VecN,
     pub radius: f64,
-    pub color: VecN
+    pub color: VecN,
+    pub material: Box<dyn Scattering + Send + Sync>,
 }
 
 impl Sphere {
     fn center(&self) -> &VecN {&self.center}
 }
 
-impl Hittable for Sphere{
+impl Hittable for Sphere {
     fn compute_hit(&self, ray: &Ray) -> Option<HitRecord> {
         // TODO: return time/None, later keep track of shortest collision time for ray
         // and also keep track of shortest collision Hittable. Then only calc
@@ -32,6 +32,11 @@ impl Hittable for Sphere{
             return None;
         } 
 
+        // TODO: Move this into config
+
+        // The 0.0001 prevents rays that actually hit the object at t = 0 but are calculated as
+        // -0.0000000001 from falsely impacting the final image. We filter the floating point
+        // approximation error.
         let t_min = 0.0001;
         let t_max = f64::INFINITY;
         
@@ -54,15 +59,14 @@ impl Hittable for Sphere{
 
         return Some(HitRecord{
             pos: ray.at(t),
-            normal: None,
             time: t,
             ray: *ray,
-            hittable: Box::new(*self),
             compute_normal: Box::new(move || {
                 let outward_normal = (pos - center) / radius;
                 let is_internal = dir.dot(&outward_normal) < 0.;
                 if is_internal {outward_normal} else {-outward_normal}
-            })
+            }),
+            material: &self.material
         })
     }
 }
