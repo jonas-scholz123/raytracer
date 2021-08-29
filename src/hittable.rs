@@ -1,39 +1,25 @@
-use crate::{VecN, Vec3, sphere::Sphere};
+use crate::{VecN};
 use crate::ray::Ray;
+use crate::material::Scattering;
 use std::cmp::Ordering;
 
 pub mod sphere;
 
-pub struct HitRecord {
+pub struct HitRecord<'a> {
     pub pos: VecN,
-    pub normal: Option<VecN>,
     pub time: f64,
     pub ray: Ray,
-    pub hittable: Box<dyn Hittable>,
-    pub compute_normal: Box<dyn Fn() -> VecN>
+    pub compute_normal: Box<dyn Fn() -> VecN>,
+    pub material: &'a Box<dyn Scattering + 'a + Send + Sync>
 }
 
-impl Default for HitRecord {
-    fn default() -> HitRecord {
-        let null: Vec3<f64> = Vec3::new(0., 0., 0.);
-        HitRecord {
-            pos: null,
-            normal: None,
-            time: f64::INFINITY,
-            ray: Ray::new(null, null),
-            hittable: Box::new(Sphere{ center: null, radius: 0., color: null}),
-            compute_normal: Box::new(move || {null})
-        }
-    }
-}
-
-impl PartialEq for HitRecord {
+impl<'a> PartialEq for HitRecord<'a> {
     fn eq(&self, other: &Self) -> bool {
         self.time == other.time
     }
 }
 
-impl PartialOrd for HitRecord {
+impl<'a> PartialOrd for HitRecord<'a> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         if self.time == other.time {
             return Some(Ordering::Equal)
@@ -47,9 +33,9 @@ impl PartialOrd for HitRecord {
     }
 }
 
-impl Eq for HitRecord {}
+impl<'a> Eq for HitRecord<'a> {}
 
-impl Ord for HitRecord {
+impl<'a> Ord for HitRecord<'a> {
     fn cmp(&self, other: &Self) -> Ordering {
         if self.time == other.time {
             return Ordering::Equal
@@ -63,6 +49,6 @@ impl Ord for HitRecord {
     }
 }
 
-pub trait Hittable{
+pub trait Hittable {
     fn compute_hit(&self, ray: &Ray) -> Option<HitRecord>;
 }

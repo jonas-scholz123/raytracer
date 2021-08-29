@@ -1,16 +1,18 @@
 use std::cmp::min;
 
-use crate::{hittable::{HitRecord, sphere::Sphere}};
+use crate::{hittable::{HitRecord, sphere::Sphere}, material::lambertian::Lambertian};
 use crate::Ray;
 use crate::Vec3;
 use crate::hittable::{Hittable};
+use rayon::prelude::*;
+
 
 pub struct Scene
 {
     pub width: u32,
     pub height: u32,
     pub fov: f64,
-    pub hittables: Vec<Box<dyn Hittable>> // TODO: make this a vector of references with lifetimes
+    pub hittables: Vec<Box<dyn Hittable + Send + Sync>> // TODO: make this a vector of references with lifetimes
 }
 
 //TODO: Fix, polymorphism
@@ -24,30 +26,17 @@ impl Scene {
         }
     }
 
-    pub fn add_hittable(&mut self, hittable: Box<dyn Hittable>) {
+    pub fn add_hittable(&mut self, hittable: Box<dyn Hittable + Send + Sync>) {
         self.hittables.push(hittable);
     }
 
     pub fn next_hit(&self, ray: &Ray) -> Option<HitRecord> {
-        let mut next_hit = HitRecord::default();
-
-        for hittable in &self.hittables {
-            match hittable.compute_hit(ray) {
-                Some(record) => next_hit = min(next_hit, record),
-                None => continue
-            }
-        }
-
-        if next_hit.time == f64::INFINITY {
-            return None;
-        }
-        // Only compute the normal of the next hit.
-        next_hit.normal = Some((next_hit.compute_normal)());
-        //next_hit.hittable.compute_normal(&mut next_hit);
-        Some(next_hit)
+        // Use the Ordering of HitRecord to find the earliest hit and return it
+        self.hittables
+           .iter()
+           .filter_map(|hittable| hittable.compute_hit(ray))
+           .min()
     }
-    
-    pub fn render() {}
 }
 
 #[test]
@@ -57,7 +46,8 @@ fn can_render_scene() {
     let sphere = Box::new(Sphere {
         center: Vec3::new(0.0, 0.0, -5.0),
         radius: 1.0,
-        color: Vec3::new(0.4, 1.0, 0.4)
+        color: Vec3::new(0.4, 1.0, 0.4),
+        material: Box::new(Lambertian{albedo: Vec3::new(0., 0., 0.)}),
     });
 
     scene.add_hittable(sphere);
