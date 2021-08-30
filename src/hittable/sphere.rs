@@ -8,7 +8,6 @@ use crate::ray::Ray;
 pub struct Sphere {
     pub center: VecN,
     pub radius: f64,
-    pub color: VecN,
     pub material: Box<dyn Scattering + Send + Sync>,
 }
 

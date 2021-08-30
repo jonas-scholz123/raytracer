@@ -8,6 +8,7 @@ use crate::material::Scattering;
 use crate::Color;
 use crate::Ray;
 use crate::hittable::HitRecord;
+use crate::utils::NearZero;
 use crate::utils::RandVec;
 
 pub struct Lambertian {
@@ -15,11 +16,19 @@ pub struct Lambertian {
 }
 
 impl Scattering for Lambertian {
-    fn scatter(&self, rng: &mut ThreadRng, ray_in: &Ray, hit: &HitRecord, attenuation: &mut Color, ray_out: &Ray) -> bool {
-       let scatter_dir = (hit.compute_normal) () + Vec3::<f64>::rand_unit(rng).normalize();
-       let scattered = Ray::new(hit.pos, scatter_dir);
-       let mut rng = rand::thread_rng();
-       *attenuation = self.albedo.clone();
-       return true;
+    fn scatter(&self, ray_in: &Ray, hit: &HitRecord, attenuation: &mut Color, ray_out: &mut Ray) -> bool {
+        
+        let mut rng = rand::thread_rng();
+        let normal = (hit.compute_normal) ();
+        let mut scatter_dir = normal + Vec3::<f64>::rand_unit(&mut rng).normalize();
+
+        // catch NaNs before they happen
+        if scatter_dir.near_zero() {
+            scatter_dir = normal;
+        }
+
+        *ray_out = Ray::new(hit.pos, scatter_dir);
+        *attenuation = self.albedo.clone();
+        return true;
     }
 }

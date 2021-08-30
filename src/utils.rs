@@ -12,6 +12,16 @@ pub trait RandVec {
     fn rand_unit(rng: &mut ThreadRng) -> VecN;
 }
 
+pub trait NearZero {
+    fn near_zero(self: &Self) -> bool;
+}
+
+impl NearZero for Vec3<f64> {
+    fn near_zero(self: &Self) -> bool {
+        self.norm() < 1e-8
+    }
+}
+
 impl RandVec for Vec3<f64> {
     fn rand(rng: &mut ThreadRng, min: f64, max: f64) -> VecN {
         let x = rng.gen_range(min..max);

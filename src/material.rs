@@ -1,4 +1,5 @@
 pub mod lambertian;
+pub mod metal;
 
 use nalgebra::Col;
 use rand::prelude::ThreadRng;
@@ -8,5 +9,5 @@ use crate::hittable::HitRecord;
 use crate::Color;
 
 pub trait Scattering {
-    fn scatter(&self, rng: &mut ThreadRng, ray_in: &Ray, hit: &HitRecord, attenuation: &mut Color, ray_out: &Ray) -> bool;
+    fn scatter(&self, ray_in: &Ray, hit: &HitRecord, attenuation: &mut Color, ray_out: &mut Ray) -> bool;
 }

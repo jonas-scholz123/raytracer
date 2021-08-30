@@ -2,6 +2,7 @@ use camera::Camera;
 use hittable::sphere::Sphere;
 use image::{ImageBuffer, Rgb};
 use material::lambertian::Lambertian;
+use material::metal::Metal;
 use nalgebra::{Norm, Vec3};
 use rand::{Rng, prelude::ThreadRng};
 use ray::Ray;
@@ -37,11 +38,14 @@ fn ray_color(ray: &Ray, scene: &Scene, rng: &mut ThreadRng, depth: u32) -> Color
 
     match scene.next_hit(&ray)  {
         Some(hit) => {
-            //let target = hit.pos + (hit.compute_normal)() + Vec3::<f64>::rand_unit(rng);
-            let new_direction = (hit.compute_normal)() + Vec3::<f64>::rand_unit(rng).normalize();
-            let next_ray = Ray::new(hit.pos, new_direction);
-            return 0.5 * ray_color(&next_ray, &scene, rng, depth - 1);
-            //return ((hit.compute_normal)() + Color::new(1., 1., 1.)) * 0.5;
+            
+            let mut ray_out = Ray::new(Vec3::new(0., 0., 0.), Vec3::new(0., 0., 0.));
+            let mut attenuation = Color::new(0., 0., 0.);
+
+            if hit.material.scatter(&ray, &hit, &mut attenuation, &mut ray_out) {
+                return attenuation * ray_color(&ray_out, &scene, rng, depth - 1)
+            }
+            return Color::new(0., 0., 0.);
         },
         None => {
             let unit_dir = ray.dir().normalize();
@@ -127,23 +131,31 @@ fn make_background() {
     let sphere1 = Sphere{
         center: Vec3::new(0., 0., -1.),
         radius: 0.5,
-        color: Vec3::new(0., 0., 0.),
-        material: Box::new(Lambertian {albedo: Vec3::new(0., 0., 0.)})
+        material: Box::new(Lambertian {albedo: Vec3::new(0.5, 0.5, 0.5)})
     };
-
 
     let sphere2 = Sphere{
         center: Vec3::new(0., - 100.5, -1.),
         radius: 100.,
-        color: Vec3::new(0., 0., 0.),
-        material: Box::new(Lambertian {albedo: Vec3::new(0., 0., 0.)})
+        material: Box::new(Lambertian {albedo: Vec3::new(0.3, 0.8, 0.2)})
     };
 
-    //let sphere3 = Sphere{ center: Vec3::new(0.5, 0.5, -1.), radius: 0.1, color: Vec3::new(0., 0., 0.)};
+    let sphere3 = Sphere{
+        center: Vec3::new(-1., 0., -1.),
+        radius: 0.5,
+        material: Box::new(Metal {albedo: Vec3::new(0.8, 0.8, 0.8)})
+    };
+
+    let sphere4 = Sphere{
+        center: Vec3::new(1., 0., -1.),
+        radius: 0.5,
+        material: Box::new(Metal {albedo: Vec3::new(0.8, 0.6, 0.2)})
+    };
 
     scene.add_hittable(Box::new(sphere1));
     scene.add_hittable(Box::new(sphere2));
-    //scene.add_hittable(Box::new(sphere3));
+    scene.add_hittable(Box::new(sphere3));
+    scene.add_hittable(Box::new(sphere4));
 
     render(&scene, &cam, samples_per_pixel)
 
