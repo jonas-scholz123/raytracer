@@ -1,6 +1,5 @@
 use nalgebra::Norm;
 use nalgebra::Vec3;
-use rand::thread_rng;
 
 use crate::material::Scattering;
 use crate::Color;
@@ -16,9 +15,8 @@ pub struct Lambertian {
 impl Scattering for Lambertian {
     fn scatter(&self, _ray_in: &Ray, hit: &HitRecord, attenuation: &mut Color, ray_out: &mut Ray) -> bool {
         
-        let mut rng = thread_rng();
         let normal = (hit.compute_normal) ();
-        let mut scatter_dir = normal + Vec3::<f64>::rand_unit(&mut rng).normalize();
+        let mut scatter_dir = normal + Vec3::<f64>::rand_unit().normalize();
 
         // catch NaNs before they happen
         if scatter_dir.near_zero() {

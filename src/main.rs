@@ -4,10 +4,10 @@ use image::{ImageBuffer, Rgb};
 use material::lambertian::Lambertian;
 use material::metal::Metal;
 use nalgebra::{Norm, Vec3};
-use rand::{Rng, prelude::ThreadRng};
+use rand::{Rng};
 use ray::Ray;
 use scene::Scene;
-use std::time::Instant;
+use std::{time::Instant};
 use rayon::prelude::*;
 
 
@@ -28,7 +28,7 @@ fn main() {
     println!("Elapsed time: {:.2?}", before.elapsed());
 }
 
-fn ray_color(ray: &Ray, scene: &Scene, rng: &mut ThreadRng, depth: u32) -> Color {
+fn ray_color(ray: &Ray, scene: &Scene, depth: u32) -> Color {
 
     //println!("{}", depth);
     if depth <= 0 {
@@ -42,7 +42,7 @@ fn ray_color(ray: &Ray, scene: &Scene, rng: &mut ThreadRng, depth: u32) -> Color
             let mut attenuation = Color::new(0., 0., 0.);
 
             if hit.material.scatter(&ray, &hit, &mut attenuation, &mut ray_out) {
-                return attenuation * ray_color(&ray_out, &scene, rng, depth - 1)
+                return attenuation * ray_color(&ray_out, &scene, depth - 1)
             }
             return Color::new(0., 0., 0.);
         },
@@ -70,7 +70,7 @@ fn render_pixel(coords: (u32, u32), scene: &Scene, cam: &Camera, n_samples: u32)
         let v = (j + rng.gen::<f64>()) / (scene.height - 1) as f64;
 
         let r = cam.get_ray(u, v);
-        pixel_color += ray_color(&r, &scene, &mut rng, 50);
+        pixel_color += ray_color(&r, &scene, 50);
         //println!("colour: {}", pixel_color)
     }
 
@@ -135,13 +135,19 @@ fn make_background() {
     let sphere3 = Sphere{
         center: Vec3::new(-1., 0., -1.),
         radius: 0.5,
-        material: Box::new(Metal {albedo: Vec3::new(0.8, 0.8, 0.8)})
+        material: Box::new(Metal {
+            albedo: Vec3::new(0.8, 0.8, 0.8),
+            fuzz: 0.1,
+        })
     };
 
     let sphere4 = Sphere{
         center: Vec3::new(1., 0., -1.),
         radius: 0.5,
-        material: Box::new(Metal {albedo: Vec3::new(0.8, 0.6, 0.2)})
+        material: Box::new(Metal {
+            albedo: Vec3::new(0.8, 0.6, 0.2),
+            fuzz: 0.1
+        })
     };
 
     scene.add_hittable(Box::new(sphere1));
