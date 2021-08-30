@@ -113,7 +113,7 @@ fn make_background() {
     let aspect_ratio = 16.0/9.0;
     let width = 800;
     let height = (width as f64 / aspect_ratio) as u32;
-    let fov = 3.;
+    let fov = 2.;
     let samples_per_pixel = 50;
 
     let cam = Camera::default();
