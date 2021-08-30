@@ -11,10 +11,6 @@ pub struct Sphere {
     pub material: Box<dyn Scattering + Send + Sync>,
 }
 
-impl Sphere {
-    fn center(&self) -> &VecN {&self.center}
-}
-
 impl Hittable for Sphere {
     fn compute_hit(&self, ray: &Ray) -> Option<HitRecord> {
         // TODO: return time/None, later keep track of shortest collision time for ray

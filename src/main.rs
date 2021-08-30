@@ -8,7 +8,6 @@ use rand::{Rng, prelude::ThreadRng};
 use ray::Ray;
 use scene::Scene;
 use std::time::Instant;
-use utils::RandVec;
 use rayon::prelude::*;
 
 
@@ -56,8 +55,7 @@ fn ray_color(ray: &Ray, scene: &Scene, rng: &mut ThreadRng, depth: u32) -> Color
     }
 }
 
-fn render_pixel(coords: (u32, u32), scene: &Scene, cam: &Camera) -> Rgb<u8>{
-    let n_samples = 100;
+fn render_pixel(coords: (u32, u32), scene: &Scene, cam: &Camera, n_samples: u32) -> Rgb<u8>{
     let mut pixel_color = Vec3::new(0., 0., 0.);
 
     let mut rng = rand::thread_rng();
@@ -88,29 +86,23 @@ fn render_pixel(coords: (u32, u32), scene: &Scene, cam: &Camera) -> Rgb<u8>{
 }
 
 fn render(scene: &Scene, cam: &Camera, n_samples: u32) {
-    //let mut imgbuf = image::ImageBuffer::new(scene.width as u32, scene.height as u32);
-    let mut count = 0;
-
+    // prepare a Vec of all pixel coordinates for parallelisation
     let mut coords: Vec<(u32, u32)> = Vec::new();
-
     for i in 0..scene.width {
         for j in (0..scene.height).rev() {
             coords.push((i, j));
         }
     }
 
-    //let imgbuf: ImageBuffer<Rgb<u8>, Vec<u8>> = ImageBuffer::from_vec(1, 1, vec![3]).unwrap();
-    let mut imgbuf: ImageBuffer<Rgb<u8>, _> = ImageBuffer::new(scene.width, scene.height);
-
-    //let render_fn = render_fn(*scene, *cam, n_samples);
-
+    // Actually render the image
     let colors: Vec<Rgb<u8>> = coords
         .par_iter()
-        .map(|pos| render_pixel(*pos, &scene, &cam))
+        .map(|pos| render_pixel(*pos, &scene, &cam, n_samples))
         .collect();
 
+    // Transfer the rendered colours to the ImageBuffer
+    let mut imgbuf: ImageBuffer<Rgb<u8>, _> = ImageBuffer::new(scene.width, scene.height);
     for (i, j, pixel) in imgbuf.enumerate_pixels_mut() {
-        count += 1;
         *pixel = colors[(i * scene.height) as usize + j as usize];
     }
 
@@ -122,7 +114,7 @@ fn make_background() {
     let width = 800;
     let height = (width as f64 / aspect_ratio) as u32;
     let fov = 3.;
-    let samples_per_pixel = 500;
+    let samples_per_pixel = 50;
 
     let cam = Camera::default();
 

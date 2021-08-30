@@ -1,8 +1,6 @@
-use std::iter::Scan;
-
 use nalgebra::Norm;
 use nalgebra::Vec3;
-use rand::prelude::ThreadRng;
+use rand::thread_rng;
 
 use crate::material::Scattering;
 use crate::Color;
@@ -16,9 +14,9 @@ pub struct Lambertian {
 }
 
 impl Scattering for Lambertian {
-    fn scatter(&self, ray_in: &Ray, hit: &HitRecord, attenuation: &mut Color, ray_out: &mut Ray) -> bool {
+    fn scatter(&self, _ray_in: &Ray, hit: &HitRecord, attenuation: &mut Color, ray_out: &mut Ray) -> bool {
         
-        let mut rng = rand::thread_rng();
+        let mut rng = thread_rng();
         let normal = (hit.compute_normal) ();
         let mut scatter_dir = normal + Vec3::<f64>::rand_unit(&mut rng).normalize();
 

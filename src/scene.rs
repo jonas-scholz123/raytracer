@@ -1,10 +1,6 @@
-use std::cmp::min;
-
-use crate::{hittable::{HitRecord, sphere::Sphere}, material::lambertian::Lambertian};
+use crate::hittable::HitRecord;
 use crate::Ray;
-use crate::Vec3;
 use crate::hittable::{Hittable};
-use rayon::prelude::*;
 
 
 pub struct Scene
@@ -39,20 +35,26 @@ impl Scene {
     }
 }
 
-#[test]
-fn can_render_scene() {
-    let mut scene = Scene::new(800, 600, 90.);
+#[cfg(test)]
+mod tests {
+    use nalgebra::Vec3;
+    use crate::{hittable::sphere::Sphere, material::lambertian::Lambertian};
 
-    let sphere = Box::new(Sphere {
-        center: Vec3::new(0.0, 0.0, -5.0),
-        radius: 1.0,
-        color: Vec3::new(0.4, 1.0, 0.4),
-        material: Box::new(Lambertian{albedo: Vec3::new(0., 0., 0.)}),
-    });
+    use super::*;
+    #[test]
+    fn can_render_scene() {
+        let mut scene = Scene::new(800, 600, 90.);
 
-    scene.add_hittable(sphere);
+        let sphere = Box::new(Sphere {
+            center: Vec3::new(0.0, 0.0, -5.0),
+            radius: 1.0,
+            material: Box::new(Lambertian{albedo: Vec3::new(0., 0., 0.)}),
+        });
 
-    //let img = scene.render();
-    //assert_eq!(scene.width, img.width());
-    //assert_eq!(scene.height, img.height());
+        scene.add_hittable(sphere);
+
+        //let img = scene.render();
+        //assert_eq!(scene.width, img.width());
+        //assert_eq!(scene.height, img.height());
+    }
 }

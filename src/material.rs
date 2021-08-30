@@ -1,9 +1,6 @@
 pub mod lambertian;
 pub mod metal;
 
-use nalgebra::Col;
-use rand::prelude::ThreadRng;
-
 use crate::ray::Ray;
 use crate::hittable::HitRecord;
 use crate::Color;
