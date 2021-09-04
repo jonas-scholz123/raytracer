@@ -10,7 +10,8 @@ pub struct HitRecord<'a> {
     pub time: f64,
     pub ray: Ray,
     pub compute_normal: Box<dyn Fn() -> VecN>,
-    pub material: &'a Box<dyn Scattering + 'a + Send + Sync>
+    pub material: &'a Box<dyn Scattering + 'a + Send + Sync>,
+    pub compute_is_external: Box<dyn Fn() -> bool>,
 }
 
 impl<'a> PartialEq for HitRecord<'a> {

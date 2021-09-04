@@ -23,9 +23,7 @@ impl Hittable for Sphere {
         let proj = oc.dot(ray.dir());
         let c = oc.sqnorm() - self.radius * self.radius;
         let discriminant = proj * proj - dir2 * c;
-        if discriminant < 0. {
-            return None;
-        } 
+        if discriminant < 0. { return None; } 
 
         // TODO: Move this into config
 
@@ -35,15 +33,16 @@ impl Hittable for Sphere {
         let t_min = 0.0001;
         let t_max = f64::INFINITY;
         
-        let root = (-proj - discriminant.sqrt()) / dir2;
+        let mut root = (-proj - discriminant.sqrt()) / dir2;
+
         if root < t_min || t_max < root {
-            let root = (-proj + discriminant.sqrt()) / dir2;
+            root = (-proj + discriminant.sqrt()) / dir2;
             if root < t_min || t_max < root {
                 return None;
             }
         }
 
-        let t = -(proj + discriminant.sqrt()) / dir2;
+        let t = root;
 
         // clone all the params required for compute_normal
         // and 'move' them into closure
@@ -58,8 +57,12 @@ impl Hittable for Sphere {
             ray: *ray,
             compute_normal: Box::new(move || {
                 let outward_normal = (pos - center) / radius;
-                let is_internal = dir.dot(&outward_normal) < 0.;
-                if is_internal {outward_normal} else {-outward_normal}
+                let is_external = dir.dot(&outward_normal) < 0.;
+                if is_external {outward_normal} else {-outward_normal}
+            }),
+            compute_is_external: Box::new(move || {
+                let outward_normal = (pos - center) / radius;
+                dir.dot(&outward_normal) < 0.
             }),
             material: &self.material
         })

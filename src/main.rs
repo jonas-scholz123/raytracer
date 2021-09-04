@@ -1,7 +1,7 @@
 use camera::Camera;
 use hittable::sphere::Sphere;
 use image::{ImageBuffer, Rgb};
-use material::lambertian::Lambertian;
+use material::{dielectric::Dielectric, lambertian::Lambertian};
 use material::metal::Metal;
 use nalgebra::{Norm, Vec3};
 use rand::{Rng};
@@ -24,13 +24,13 @@ type Color = Vec3<f64>;
 
 fn main() {
     let before = Instant::now();
-    make_background();
+    render_image();
     println!("Elapsed time: {:.2?}", before.elapsed());
 }
 
 fn ray_color(ray: &Ray, scene: &Scene, depth: u32) -> Color {
 
-    //println!("{}", depth);
+    //println!("depth: {}", depth);
     if depth <= 0 {
         return Vec3::new(0., 0., 0.);
     }
@@ -42,6 +42,7 @@ fn ray_color(ray: &Ray, scene: &Scene, depth: u32) -> Color {
             let mut attenuation = Color::new(0., 0., 0.);
 
             if hit.material.scatter(&ray, &hit, &mut attenuation, &mut ray_out) {
+
                 return attenuation * ray_color(&ray_out, &scene, depth - 1)
             }
             return Color::new(0., 0., 0.);
@@ -71,7 +72,6 @@ fn render_pixel(coords: (u32, u32), scene: &Scene, cam: &Camera, n_samples: u32)
 
         let r = cam.get_ray(u, v);
         pixel_color += ray_color(&r, &scene, 50);
-        //println!("colour: {}", pixel_color)
     }
 
     pixel_color /= n_samples as f64;
@@ -109,7 +109,7 @@ fn render(scene: &Scene, cam: &Camera, n_samples: u32) {
     imgbuf.save("./images/background.png").unwrap();
 }
 
-fn make_background() {
+fn render_image() {
     let aspect_ratio = 16.0/9.0;
     let width = 800;
     let height = (width as f64 / aspect_ratio) as u32;
@@ -120,40 +120,49 @@ fn make_background() {
 
     let mut scene = Scene::new(width, height, fov);
 
-    let sphere1 = Sphere{
+    let right_sphere = Sphere{
         center: Vec3::new(0., 0., -1.),
         radius: 0.5,
         material: Box::new(Lambertian {albedo: Vec3::new(0.5, 0.5, 0.5)})
     };
 
-    let sphere2 = Sphere{
+    let ground = Sphere{
         center: Vec3::new(0., - 100.5, -1.),
         radius: 100.,
         material: Box::new(Lambertian {albedo: Vec3::new(0.3, 0.8, 0.2)})
     };
 
-    let sphere3 = Sphere{
+    let left_sphere = Sphere{
         center: Vec3::new(-1., 0., -1.),
         radius: 0.5,
         material: Box::new(Metal {
-            albedo: Vec3::new(0.8, 0.8, 0.8),
+            albedo: Vec3::new(0.4, 0.8, 0.8),
             fuzz: 0.1,
         })
     };
 
-    let sphere4 = Sphere{
+    let centre_sphere = Sphere{
         center: Vec3::new(1., 0., -1.),
         radius: 0.5,
-        material: Box::new(Metal {
-            albedo: Vec3::new(0.8, 0.6, 0.2),
-            fuzz: 0.1
+        material: Box::new(Dielectric {
+            reflection_index: 1.5
         })
     };
 
-    scene.add_hittable(Box::new(sphere1));
-    scene.add_hittable(Box::new(sphere2));
-    scene.add_hittable(Box::new(sphere3));
-    scene.add_hittable(Box::new(sphere4));
+
+    let inner_centre_sphere = Sphere{
+        center: Vec3::new(1., 0., -1.),
+        radius: -0.4,
+        material: Box::new(Dielectric {
+            reflection_index: 1.5
+        })
+    };
+
+    scene.add_hittable(Box::new(ground));
+    scene.add_hittable(Box::new(left_sphere));
+    scene.add_hittable(Box::new(right_sphere));
+    scene.add_hittable(Box::new(centre_sphere));
+    //scene.add_hittable(Box::new(inner_centre_sphere));
 
     render(&scene, &cam, samples_per_pixel)
 
