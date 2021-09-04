@@ -5,7 +5,7 @@ pub mod dielectric;
 use nalgebra::{Dot, Norm, Vec3};
 
 use crate::ray::Ray;
-use crate::hittable::{HitRecord, Hittable};
+use crate::hittable::{HitRecord};
 use crate::Color;
 
 pub trait Scattering {

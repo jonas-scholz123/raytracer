@@ -3,7 +3,6 @@ use nalgebra::Norm;
 use rand::Rng;
 use rand::thread_rng;
 
-use crate::hittable::Hittable;
 use crate::material::Scattering;
 use crate::Color;
 use crate::Ray;

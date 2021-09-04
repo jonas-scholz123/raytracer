@@ -1,17 +1,16 @@
 use camera::Camera;
-use hittable::Hittable;
 use hittable::sphere::Sphere;
 use image::{ImageBuffer, Rgb};
 use material::{RandMaterial, Scattering};
 use material::{dielectric::Dielectric, lambertian::Lambertian};
 use material::metal::Metal;
 use nalgebra::{Norm, Vec3};
-use rand::{Rng, thread_rng};
+use rand::{Rng};
 use ray::Ray;
 use scene::Scene;
 use std::{time::Instant};
 use rayon::prelude::*;
-use utils::{RandVec, rand_f64, rand_f64_range};
+use utils::{rand_f64};
 
 
 extern crate image;
