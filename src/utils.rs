@@ -6,6 +6,7 @@ use crate::{Vec3, VecN};
 pub trait RandVec {
     fn rand(min: f64, max: f64) -> VecN;
     fn rand_unit() -> VecN;
+    fn rand_in_unit_disk() -> VecN;
 }
 
 pub trait NearZero {
@@ -37,4 +38,24 @@ impl RandVec for Vec3<f64> {
             };
         }
     }
+
+    fn rand_in_unit_disk() -> VecN {
+        let mut rng = thread_rng();
+        loop {
+            let p = Vec3::new(rng.gen_range(0. .. 1.), rng.gen_range(0. .. 1.), 0.);
+            if p.sqnorm() < 1. {
+                return p;
+            }
+        }
+    }
+}
+
+pub fn rand_f64() -> f64 {
+    let mut rng = thread_rng();
+    rng.gen()
+}
+
+pub fn rand_f64_range(min: f64, max: f64) -> f64 {
+    let mut rng = thread_rng();
+    rng.gen_range(min..max)
 }

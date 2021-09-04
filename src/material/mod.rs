@@ -5,7 +5,7 @@ pub mod dielectric;
 use nalgebra::{Dot, Norm, Vec3};
 
 use crate::ray::Ray;
-use crate::hittable::HitRecord;
+use crate::hittable::{HitRecord, Hittable};
 use crate::Color;
 
 pub trait Scattering {
@@ -22,4 +22,8 @@ fn refract(in_dir: &Vec3<f64>, normal: &Vec3<f64>, refraction_ratio: f64) -> Vec
     let r_out_perp = refraction_ratio * (*in_dir + cos_theta * *normal);
     let r_out_parallel = -(1. - r_out_perp.sqnorm()).abs().sqrt() * *normal;
     r_out_parallel + r_out_perp
+}
+
+pub trait RandMaterial {
+    fn random() -> Box<dyn Scattering + Send + Sync>;
 }

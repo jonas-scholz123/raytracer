@@ -7,6 +7,9 @@ use crate::Ray;
 use crate::hittable::HitRecord;
 use crate::utils::NearZero;
 use crate::utils::RandVec;
+use crate::utils::rand_f64;
+
+use super::RandMaterial;
 
 pub struct Lambertian {
     pub albedo: Color,
@@ -26,5 +29,16 @@ impl Scattering for Lambertian {
         *ray_out = Ray::new(hit.pos, scatter_dir);
         *attenuation = self.albedo.clone();
         return true;
+    }
+}
+
+impl RandMaterial for Lambertian {
+    fn random() -> Box<dyn Scattering + Send + Sync> {
+        let x = rand_f64();
+        let y = rand_f64();
+        let z = rand_f64();
+        // Square to get darker colours
+        let albedo = Vec3::new(x*x, y*y, z*z);
+        Box::new(Lambertian {albedo: albedo})    
     }
 }

@@ -1,14 +1,17 @@
 use camera::Camera;
+use hittable::Hittable;
 use hittable::sphere::Sphere;
 use image::{ImageBuffer, Rgb};
+use material::{RandMaterial, Scattering};
 use material::{dielectric::Dielectric, lambertian::Lambertian};
 use material::metal::Metal;
 use nalgebra::{Norm, Vec3};
-use rand::{Rng};
+use rand::{Rng, thread_rng};
 use ray::Ray;
 use scene::Scene;
 use std::{time::Instant};
 use rayon::prelude::*;
+use utils::{RandVec, rand_f64, rand_f64_range};
 
 
 extern crate image;
@@ -24,7 +27,7 @@ type Color = Vec3<f64>;
 
 fn main() {
     let before = Instant::now();
-    render_image();
+    render_random_image();
     println!("Elapsed time: {:.2?}", before.elapsed());
 }
 
@@ -109,60 +112,90 @@ fn render(scene: &Scene, cam: &Camera, n_samples: u32) {
     imgbuf.save("./images/background.png").unwrap();
 }
 
-fn render_image() {
+fn random_material() -> Box<dyn Scattering + Send + Sync> {
+    return match rand_f64() {
+        nr if nr < 0.8 => Lambertian::random(),
+        nr if nr < 0.95 => Metal::random(),
+        _ => Dielectric::random(),
+    };
+}
+
+fn render_random_image() {
     let aspect_ratio = 16.0/9.0;
     let width = 800;
     let height = (width as f64 / aspect_ratio) as u32;
     let fov = 2.;
-    let samples_per_pixel = 50;
+    let samples_per_pixel = 500;
 
-    let cam = Camera::default();
+    let lookfrom = Vec3::new(13., 2., 3.);
+    let lookat = Vec3::new(0., 0., 0.);
+
+    let cam = Camera::new(
+        lookfrom,
+        lookat,
+        Vec3::new(0., 1., 0.),
+        20.,
+        aspect_ratio,
+        0.1,
+        10.
+        //(lookfrom - lookat).norm(),
+    );
 
     let mut scene = Scene::new(width, height, fov);
-
-    let right_sphere = Sphere{
-        center: Vec3::new(0., 0., -1.),
-        radius: 0.5,
-        material: Box::new(Lambertian {albedo: Vec3::new(0.5, 0.5, 0.5)})
-    };
-
+    let my_ground = Box::new(Lambertian {albedo: Vec3::new(0.5, 0.5, 0.5)});
     let ground = Sphere{
-        center: Vec3::new(0., - 100.5, -1.),
-        radius: 100.,
-        material: Box::new(Lambertian {albedo: Vec3::new(0.3, 0.8, 0.2)})
+        center: Vec3::new(0., -1000., 0.),
+        radius: 1000.,
+        material: my_ground,
     };
 
-    let left_sphere = Sphere{
-        center: Vec3::new(-1., 0., -1.),
-        radius: 0.5,
-        material: Box::new(Metal {
-            albedo: Vec3::new(0.4, 0.8, 0.8),
-            fuzz: 0.1,
-        })
-    };
+    for a in -11 .. 11 {
+        for b in -11 .. 11 {
 
-    let centre_sphere = Sphere{
-        center: Vec3::new(1., 0., -1.),
-        radius: 0.5,
-        material: Box::new(Dielectric {
-            reflection_index: 1.5
-        })
-    };
+            let a = a as f64;
+            let b = b as f64;
+            let center = Vec3::new(a + 0.9 * rand_f64(), 0.2, b + 0.9 * rand_f64());
 
+            if (center - Vec3::new(4., 0.2, 0.)).norm() <= 0.9 {
+                continue;
+            }
 
-    let inner_centre_sphere = Sphere{
-        center: Vec3::new(1., 0., -1.),
-        radius: -0.4,
-        material: Box::new(Dielectric {
-            reflection_index: 1.5
-        })
-    };
+            scene.add_hittable(
+                Box::new(Sphere{
+                    center: center,
+                    radius: 0.2,
+                    material: random_material(), 
+                })
+            )
+
+        }
+    }
 
     scene.add_hittable(Box::new(ground));
-    scene.add_hittable(Box::new(left_sphere));
-    scene.add_hittable(Box::new(right_sphere));
-    scene.add_hittable(Box::new(centre_sphere));
-    //scene.add_hittable(Box::new(inner_centre_sphere));
+
+    scene.add_hittable(Box::new(
+        Sphere {
+            center: Vec3::new(0., 1., 0.),
+            radius: 1.,
+            material: Dielectric::random()
+        }));
+    
+    scene.add_hittable(Box::new(
+        Sphere {
+            center: Vec3::new(4., 1., 0.),
+            radius: 1.,
+            material: Box::new(Metal {
+                albedo: Vec3::new(0.7, 0.6, 0.5),
+                fuzz: 0.
+            })
+        }));
+    
+    scene.add_hittable(Box::new(
+        Sphere {
+            center: Vec3::new(-4., 1., 0.),
+            radius: 1.,
+            material: Lambertian::random()
+        }));
 
     render(&scene, &cam, samples_per_pixel)
 

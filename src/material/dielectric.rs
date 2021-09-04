@@ -3,11 +3,13 @@ use nalgebra::Norm;
 use rand::Rng;
 use rand::thread_rng;
 
+use crate::hittable::Hittable;
 use crate::material::Scattering;
 use crate::Color;
 use crate::Ray;
 use crate::hittable::HitRecord;
 
+use super::RandMaterial;
 use super::reflect;
 use super::refract;
 
@@ -50,5 +52,11 @@ impl Scattering for Dielectric {
 
         *ray_out = Ray::new(hit.pos, direction);
         true
+    }
+}
+
+impl RandMaterial for Dielectric {
+    fn random() -> Box<dyn Scattering + Send + Sync> {
+        Box::new(Dielectric {reflection_index: 1.5})    
     }
 }

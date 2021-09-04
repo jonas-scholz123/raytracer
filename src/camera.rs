@@ -1,45 +1,78 @@
+use nalgebra::{Cross, Norm};
+
 use crate::{ray::Ray};
 use crate::Vec3;
+use crate::utils::RandVec;
 
 pub struct Camera {
-    aspect_ratio: f64,
-    viewport_height: f64,
-    viewport_width: f64,
-    focal_length: f64,
     origin: Vec3<f64>,
     vertical: Vec3<f64>,
     horizontal: Vec3<f64>,
     lower_left_corner: Vec3<f64>,
+    lens_radius: f64,
+    u: Vec3<f64>,
+    v: Vec3<f64>,
+    w: Vec3<f64>,
+}
+
+impl Camera {
+    pub fn new(
+        lookfrom: Vec3<f64>,
+        lookat: Vec3<f64>,
+        vup: Vec3<f64>,
+        vfov: f64,
+        aspect_ratio: f64,
+        aperture: f64,
+        focus_dist: f64,
+    ) -> Camera {
+
+        // vfov: f64 vertical field of view in degrees
+        let theta = vfov.to_radians();
+        let height = (theta/2.).tan();
+        let viewport_height = 2. * height;
+        let viewport_width = aspect_ratio * viewport_height;
+
+        let w = (lookfrom - lookat).normalize();
+        let u = vup.cross(&w).normalize();
+        let v = w.cross(&u);
+
+        let horizontal = focus_dist * viewport_width * u;
+        let vertical = focus_dist * viewport_height * v;
+
+        Camera {
+            origin: lookfrom,
+            horizontal: horizontal,
+            vertical: vertical,
+            lower_left_corner: lookfrom - horizontal/2. - vertical/2. - focus_dist * w,
+            lens_radius: aperture/2.,
+            u: u,
+            v: v,
+            w: w,
+        }
+    }
+
+    pub fn get_ray(&self, s: f64, t: f64) -> Ray {
+        let rd = self.lens_radius * Vec3::rand_in_unit_disk();
+        let offset = self.u * rd.x + self.v * rd.y;
+        let dir = self.lower_left_corner + self.horizontal * s + self.vertical * t  - self.origin;
+        Ray::new(self.origin + offset, dir - offset)
+    }
 }
 
 impl Default for Camera {
     fn default() -> Camera {
-        let aspect_ratio = 16.0/9.0;
-        let viewport_height = 2.0;
-        let viewport_width = (aspect_ratio * viewport_height) as f64;
+        let lookfrom = Vec3::new(0., 0., 0.);
+        let lookat = Vec3::new(0., 0., -1.);
+        let dist_to_focus = (lookfrom - lookat).norm();
 
-        let focal_length = 1.0;
-        let origin = Vec3::new(0., 0., 0.);
-        let horizontal = Vec3::new(viewport_width, 0. as f64, 0. as f64);
-        let vertical = Vec3::new(0. as f64, viewport_height as f64, 0. as f64);
-        let lower_left_corner = origin - horizontal/2. - vertical/2. - Vec3::new(0., 0., focal_length);
-
-        Camera {
-            aspect_ratio,
-            viewport_height,
-            viewport_width,
-            focal_length,
-            origin,
-            vertical,
-            horizontal,
-            lower_left_corner
-        }
-    }
-}
-
-impl Camera {
-    pub fn get_ray(&self, u: f64, v: f64) -> Ray {
-        Ray::new(self.origin, self.lower_left_corner + self.horizontal * u
-                                  +self.vertical * v  - self.origin)
+        Camera::new(
+            lookfrom,
+            lookat,
+            Vec3::new(0., 1., 0.),
+            90.,
+            16./9.,
+            2.,
+            dist_to_focus
+        )
     }
 }
